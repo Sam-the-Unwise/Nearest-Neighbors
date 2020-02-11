@@ -9,7 +9,6 @@
 
 import numpy as np
 import csv
-from math import sqrt
 from sklearn.neighbors import NearestNeighbors
 
 # Function: kFoldCV
@@ -92,3 +91,17 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
     #   (1) the predictions for X_New, using the entire X_mat, y_vec with best_neighbors
     #   (2) the mean_error_mat for visualizing the validation error
         
+# Function: main
+# INPUT ARGS:
+#    none
+# Return: none
+def main():
+
+    X_mat = np.array([])
+    y_vec = np.array([])
+
+    NearestNeighborsCV(X_Mat, y_vec, X_new, 5, 20)
+
+    return 0
+
+main()
