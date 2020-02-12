@@ -45,7 +45,9 @@ def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector):
         #       and store the mean (error rate) in the corresponding entry error_vec
         zero_one_vector = pred_new.kneighbors_graph(x_mat).toarray()
 
-        #error_vec[index_count] = zero_one_vector
+        #the below code doesn't work because of the way that zero_one_vector is stored
+        error_vec[index_count] = zero_one_vector
+        
         index_count += 1
 
     return error_vec
@@ -137,7 +139,7 @@ def main():
     X_new = np.array([])
 
     X_new_predictions, mean_error_mat = NearestNeighborsCV(X_Mat, y_vec, X_new, 5, 20)
-    
+
     # TO DO:
 
     # plot the validation error as a function of the number of neighbors

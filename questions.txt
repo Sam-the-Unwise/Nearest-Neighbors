@@ -13,5 +13,26 @@
 
 QUESTIONS IN CODE
 line 37-39
-line 46-49
-line 133
+line 46-49 (note: 49 doesn't work because of the way the zero-one-vector is stored)
+line 139
+
+# TO DO IN MAIN:
+
+    # plot the validation error as a function of the number of neighbors
+    #       separately for each fold
+    #   - Draw a bold line for the mean validation error 
+    #   - draw a point to emphasize the minimum
+
+    # Randomly createa  variable test_vold_vec
+    #   - a vector with one element for each observations
+    #       - elements are integers from 1 to 4
+    # include a table of counts with a row for each fold (1/2/3/4) and a column 
+    #   for each class (0/1)
+
+    # Use KFoldCV with three algorithms: 
+    #       (1) baseline/underfit – predict most frequent class, 
+    #       (2) NearestNeighborsCV, 
+    #       (3) overfit 1-nearest neighbors model. Plot the resulting test 
+    #               error values as a function of the data set, in order to 
+    #               show that the NearestNeighborsCV is more accurate than 
+    #               the other two models. Example:
