@@ -39,7 +39,7 @@ def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector):
         y_train = 0
 
         # call ComputePredictions and store the result in a variable named pred_new
-        pred_new = compute_prediction
+        pred_new = compute_prediction(X_train, y_train, X_new)
 
         # compute the zero-one loss of pred_new with respect to y_new
         #       and store the mean (error rate) in the corresponding entry error_vec
@@ -60,6 +60,8 @@ def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector):
 #    max_neighbors : default value 20
 # Return: error_vec
 def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
+    # array with numbers 1 to k 
+    #       k = length of num_folds
     validation_fold_vec = np.array([num for num in range(1, num_folds + 1)])
     
     total_entries = num_folds * max_neighbors
@@ -71,13 +73,18 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
     
     error_mat_index = 0
 
-    # for loop over num_neighbors
     for index in range(1, max_neighbors):
-        #call KFoldCV
-        # specify ComputePredictions = function that uses your programs language's         
+        # call KFoldCV, and specify ComputePreditions = a function that uses 
+        #    your programming language’s default implementation of the nearest 
+        #    neighbors algorithm, with num_neighbors 
+
+        # store error rate vector in error_mat
         error_mat[error_mat_index] = kFoldCV(X_Mat, y_vec, 
-                            NearestNeighbors(n_neighbors=index, algorithm='ball_tree').fit(X_Mat), 
+                            NearestNeighbors(n_neighbors = index, 
+                                            algorithm = 'ball_tree')
+                                            .fit(X_Mat), 
                             validation_fold_vec)
+
         error_mat_index += 1
 
     # will contain the mean of each column of error_matrix
@@ -95,7 +102,8 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
     # output:
     #   (1) the predictions for X_New, using the entire X_mat, y_vec with best_neighbors
     #   (2) the mean_error_mat for visualizing the validation error
-        
+    
+    return X_new, error_mat
 
 # Function: convert_data_to_matrix
 # INPUT ARGS:
@@ -128,6 +136,27 @@ def main():
 
     X_new = np.array([])
 
-    NearestNeighborsCV(X_Mat, y_vec, X_new, 5, 20)
-   
+    X_new_predictions, mean_error_mat = NearestNeighborsCV(X_Mat, y_vec, X_new, 5, 20)
+    
+    # TO DO:
+
+    # plot the validation error as a function of the number of neighbors
+    #       separately for each fold
+    #   - Draw a bold line for the mean validation error 
+    #   - draw a point to emphasize the minimum
+
+    # Randomly createa  variable test_vold_vec
+    #   - a vector with one element for each observations
+    #       - elements are integers from 1 to 4
+    # include a table of counts with a row for each fold (1/2/3/4) and a column 
+    #   for each class (0/1)
+
+    # Use KFoldCV with three algorithms: 
+    #       (1) baseline/underfit – predict most frequent class, 
+    #       (2) NearestNeighborsCV, 
+    #       (3) overfit 1-nearest neighbors model. Plot the resulting test 
+    #               error values as a function of the data set, in order to 
+    #               show that the NearestNeighborsCV is more accurate than 
+    #               the other two models. Example:
+
 main()

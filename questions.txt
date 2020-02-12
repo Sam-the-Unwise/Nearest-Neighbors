@@ -1,12 +1,15 @@
 1) also what does it mean by "randomly" create validation_fold_vec?
 
-
 2) define X_new, y_new based on the observations for which the corr. elements of fold_vec are equal to the current fold ID k
     - does this mean to set both X_new and y_new to the fold ID k that we are at?
     - does this mean that we should loop through the elem
     see line 34-35
 
+3) specify ComputePredictions = NN function that uses your programs language's? Do you mean that we are supposed to just pass
+    in the function NearestNeighbors itself or...?
+--> mostly I'm just confused how were supposed to pass in the function
 
+4) for NearestNeighborsCV, what is the difference between X_new and X_mat?
 
 QUESTIONS IN CODE
 line 37-39
