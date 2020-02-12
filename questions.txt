@@ -2,3 +2,6 @@
     Ex: numfolds = 10; validation_fold_vec = [1,2,3,4,5,6,7,8,9]
             or should it include 10?
 1.2) also what does it mean by "randomly" create validation_fold_vec?
+
+
+2) define X_new, y_new based on the observations for which the corr. elements of fold_vec are equal to the current fold ID k
