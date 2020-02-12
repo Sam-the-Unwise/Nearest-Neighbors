@@ -31,7 +31,7 @@ def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector):
     for vector in fold_vector:
         # define X_new, y_new based on the observations for which the corr. elements
         #       of fold_vec are equal to the current fold ID k
-        X_new = vector
+        X_new = x_mat[vector]
         y_new = vector
 
         # define X_train, y_train using all the other observations
@@ -44,10 +44,6 @@ def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector):
         # compute the zero-one loss of pred_new with respect to y_new
         #       and store the mean (error rate) in the corresponding entry error_vec
         zero_one_vector = pred_new.kneighbors_graph(x_mat).toarray()
-        
-        
-        #for item in zero_one_vector:
-        #    print(item)
 
         #error_vec[index_count] = zero_one_vector
         index_count += 1

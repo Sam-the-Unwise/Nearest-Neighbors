@@ -1,7 +1,14 @@
-1) when initializing validation_fold_vec with numbers 1 to num_folds, should it include num_folds or exclude it?
-    Ex: numfolds = 10; validation_fold_vec = [1,2,3,4,5,6,7,8,9]
-            or should it include 10?
-1.2) also what does it mean by "randomly" create validation_fold_vec?
+1) also what does it mean by "randomly" create validation_fold_vec?
 
 
 2) define X_new, y_new based on the observations for which the corr. elements of fold_vec are equal to the current fold ID k
+    - does this mean to set both X_new and y_new to the fold ID k that we are at?
+    - does this mean that we should loop through the elem
+    see line 34-35
+
+
+
+QUESTIONS IN CODE
+line 37-39
+line 46-49
+line 133
