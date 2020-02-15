@@ -9,8 +9,15 @@
 
 import numpy as np
 import csv
-from sklearn.neighbors import NearestNeighbors
+from sklearn.neighbors import NearestNeighbors as NN
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import scale
 from sklearn import neighbors, datasets
+
+num_folds = 5
+
+TRUE = 1
+FALSE = 0
 
 # Function: kFoldCV
 # INPUT ARGS:
@@ -24,31 +31,37 @@ from sklearn import neighbors, datasets
 def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector):
     
     # numeric vector of size k
-    error_vec = np.zeros(len(fold_vector))
+    error_vec = np.zeros(num_folds)
     index_count = 0
 
     # loop over the unique values k in fold_vec
-    for vector in fold_vector:
+    for foldIDk in range(1, num_folds):
+        X_new = np.array([])
+        y_new = np.array([])
+
         # define X_new, y_new based on the observations for which the corr. elements
         #       of fold_vec are equal to the current fold ID k
-        X_new = x_mat[vector]
-        y_new = vector
+        for num in fold_vector:
+            X_new = np.append(X_new, TRUE if num == foldIDk else FALSE)
+            y_new = np.append(y_new, FALSE if num != foldIDk else TRUE)
 
         # define X_train, y_train using all the other observations
-        X_train = 0
-        y_train = 0
+        X_train = x_mat[index_count]
+        y_train = x_mat[:,index_count]
 
         # call ComputePredictions and store the result in a variable named pred_new
-        pred_new = compute_prediction(X_train, y_train, X_new)
+        # use score function to pass in X_train, y_train, and X_new
+        # score(self, X:array-like shape of test samples, y:array-like shape of true labels for X)
+        # pred_new = compute_prediction.score(X_train, X_new, y_train)
 
-        # compute the zero-one loss of pred_new with respect to y_new
-        #       and store the mean (error rate) in the corresponding entry error_vec
-        zero_one_vector = pred_new.kneighbors_graph(x_mat).toarray()
+        # # compute the zero-one loss of pred_new with respect to y_new
+        # #       and store the mean (error rate) in the corresponding entry error_vec
+        # zero_one_vector = pred_new.kneighbors_graph(x_mat).toarray()
 
-        #the below code doesn't work because of the way that zero_one_vector is stored
-        error_vec[index_count] = zero_one_vector
+        # #the below code doesn't work because of the way that zero_one_vector is stored
+        # error_vec[index_count] = zero_one_vector
         
-        index_count += 1
+        # index_count += 1
 
     return error_vec
 
@@ -64,7 +77,9 @@ def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector):
 def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
     # array with numbers 1 to k 
     #       k = length of num_folds
-    validation_fold_vec = np.array([num for num in range(1, num_folds + 1)])
+    validation_fold_vec = np.array(list(np.arange(1, num_folds + 1))*max_neighbors)
+
+    np.random.shuffle(validation_fold_vec)
     
     total_entries = num_folds * max_neighbors
 
@@ -75,15 +90,13 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
     
     error_mat_index = 0
 
-    for index in range(1, max_neighbors):
+    for num_neighbors in range(1, max_neighbors):
         # call KFoldCV, and specify ComputePreditions = a function that uses 
         #    your programming language’s default implementation of the nearest 
         #    neighbors algorithm, with num_neighbors 
 
         # store error rate vector in error_mat
-        error_mat[error_mat_index] = kFoldCV(X_Mat, y_vec, 
-                            NearestNeighbors, 
-                            validation_fold_vec)
+        error_mat[error_mat_index] = kFoldCV(X_Mat, y_vec, KNeighborsClassifier(n_neighbors = num_neighbors), validation_fold_vec)
 
         error_mat_index += 1
 
@@ -104,6 +117,9 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
     #   (2) the mean_error_mat for visualizing the validation error
     
     return X_new, error_mat
+
+
+
 
 # Function: convert_data_to_matrix
 # INPUT ARGS:
@@ -134,12 +150,15 @@ def main():
     X_Mat = np.delete(data_matrix_full, col_length - 1, 1)
     y_vec = data_matrix_full[:,57]
 
+    X_sc = scale(X_Mat)
+
     X_new = np.array([])
 
-    # print X_Mat row 1 column 0
-    #print(X_Mat[1][0])
-
-    X_new_predictions, mean_error_mat = NearestNeighborsCV(X_Mat, y_vec, X_new, 5, 20)
+    X_new_predictions, mean_error_mat = NearestNeighborsCV(X_Mat, 
+                                                            y_vec, 
+                                                            X_new, 
+                                                            num_folds, 
+                                                            20)
 
     # TO DO:
 
