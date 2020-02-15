@@ -3,7 +3,7 @@
 # AUTHOR(S): Samantha Muellner
 # DESCRIPTION: program that will find and graph nearest_neighbors on the
 #       provided data set -- in this case spam.data
-# VERSION: 1.0.0v
+# VERSION: 1.0.3v
 #
 ###############################################################################
 
@@ -82,9 +82,7 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
 
         # store error rate vector in error_mat
         error_mat[error_mat_index] = kFoldCV(X_Mat, y_vec, 
-                            NearestNeighbors(n_neighbors = index, 
-                                            algorithm = 'ball_tree')
-                                            .fit(X_Mat), 
+                            NearestNeighbors, 
                             validation_fold_vec)
 
         error_mat_index += 1
@@ -137,6 +135,9 @@ def main():
     y_vec = data_matrix_full[:,57]
 
     X_new = np.array([])
+
+    # print X_Mat row 1 column 0
+    #print(X_Mat[1][0])
 
     X_new_predictions, mean_error_mat = NearestNeighborsCV(X_Mat, y_vec, X_new, 5, 20)
 
