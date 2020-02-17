@@ -1,7 +1,23 @@
-1) when initializing validation_fold_vec with numbers 1 to num_folds, should it include num_folds or exclude it?
-    Ex: numfolds = 10; validation_fold_vec = [1,2,3,4,5,6,7,8,9]
-            or should it include 10?
-1.2) also what does it mean by "randomly" create validation_fold_vec?
+1) "best_neighbors which is the number of neighbors with minimal error"
+        - what do you define as minimal error
 
+# TO DO IN MAIN:
 
-2) define X_new, y_new based on the observations for which the corr. elements of fold_vec are equal to the current fold ID k
+    # plot the validation error as a function of the number of neighbors
+    #       separately for each fold
+    #   - Draw a bold line for the mean validation error 
+    #   - draw a point to emphasize the minimum
+
+    # Randomly createa  variable test_vold_vec
+    #   - a vector with one element for each observations
+    #       - elements are integers from 1 to 4
+    # include a table of counts with a row for each fold (1/2/3/4) and a column 
+    #   for each class (0/1)
+
+    # Use KFoldCV with three algorithms: 
+    #       (1) baseline/underfit – predict most frequent class, 
+    #       (2) NearestNeighborsCV, 
+    #       (3) overfit 1-nearest neighbors model. Plot the resulting test 
+    #               error values as a function of the data set, in order to 
+    #               show that the NearestNeighborsCV is more accurate than 
+    #               the other two models. Example:
