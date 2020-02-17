@@ -15,8 +15,13 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import scale
 from sklearn.metrics import zero_one_loss
 from sklearn import neighbors, datasets
+import random
 
 NUM_FOLDS = 5
+MAX_NEIGHBORS = 20
+
+PRED_NEW_INDEX = 0
+Y_NEW_INDEX = 1
 
 TRUE = 1
 FALSE = 0
@@ -30,37 +35,27 @@ FALSE = 0
 #           (one element for every row of X_new).
 #   fold_vector : a vector of integer fold ID numbers (from 1 to K).
 # Return: error_vec
-def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector, current_n_neighbors):
+def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector, current_n_neighbors, pred_dict):
 
     # numeric vector of size k
     error_vec = []
     col = x_mat.shape[1]
     row = x_mat.shape[0]
-    eighty_percent_row = int(row*.8)
-    twenty_percent_row = int(row*.2)
-
-    while eighty_percent_row + twenty_percent_row != row:
-        eighty_percent_row += 1
+    eighty_percent_row = int(row * .8)
+    twenty_percent_row = int(row * .2)
 
 
-    # print header for printing out "table" containing prediction vector and actual vector
-    #print("pred_y  |  real_y  |  is_error")
-    print('{: <10s}| {: <10s}| {: <10s}| {: <10s}| {}'.format("fold ID", 
-                                                                "num neighbors", 
-                                                                "pred_y", 
-                                                                "real_y", 
-                                                                "is_error"))
+    y_new_info = {}
+    y_pred_info = {}
 
     # loop over the unique values k in fold_vec
     for foldIDk in range(1, NUM_FOLDS + 1):
         # define X_train, y_train using all the other observations
-        X_train = np.zeros(col*eighty_percent_row).reshape(eighty_percent_row, 
-                                                        col)
+        X_train = np.zeros(col*eighty_percent_row).reshape(eighty_percent_row, col)
         y_train = np.zeros(eighty_percent_row)
 
         # define X_new, y_new to contain the corr. folds of foldIDk to num_folds
-        X_new = np.zeros(col*twenty_percent_row).reshape(twenty_percent_row, 
-                                                        col)
+        X_new = np.zeros(col*twenty_percent_row).reshape(twenty_percent_row, col)
         y_new = np.zeros(twenty_percent_row)
 
         one_items_in_x_new = 0
@@ -75,12 +70,32 @@ def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector, current_n_neighbors):
         for num in fold_vector:
 
             if num == foldIDk:
+                # # account for possibility that our row amount doesn't divide evenly into 80% and 20%
+                # # ex: 4601 yields 80%: 3680 and 20%:920, meaning we didn't account for the last 1
+                # if index >= X_new.shape[0] and X_train.shape[0] + X_new.shape[0] < row:
+                #     y_new = np.append(y_new, y_vec[index])
+                #     X_new = np.append(X_new, x_mat[index,:])
+                
+                # else:
+                #     y_new[new_index] = y_vec[index]
+                #     X_new[new_index] = x_mat[index,:]
+                
                 y_new[new_index] = y_vec[index]
                 X_new[new_index] = x_mat[index,:]
 
                 new_index += 1
 
             else:
+                # # account for possibility that our row amount doesn't divide evenly into 80% and 20%
+                # # ex: 4601 yields 80%: 3680 and 20%:920, meaning we didn't account for the last 1
+                # if index >= X_new.shape[0] and X_train.shape[0] + X_new.shape[0] < row:
+                #     y_new = np.append(y_new, y_vec[index])
+                #     X_train = np.append(X_train, x_mat[index,:])
+
+                # else:
+                #     y_train[train_index] = y_vec[index]
+                #     X_train[train_index] = x_mat[index,:]
+                
                 y_train[train_index] = y_vec[index]
                 X_train[train_index] = x_mat[index,:]
 
@@ -92,24 +107,17 @@ def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector, current_n_neighbors):
         #       pred_new
         pred_new = compute_prediction.fit(X_train, y_train).predict(X_new)
 
-
-        # print out the actual vector and the prediction vector
-        for index in range(len(pred_new)):
-            is_error = pred_new[index] != y_new[index]
-            print('{: <10s}| {: <10s}| {: <10s}| {: <10s}| {}'
-                                                    .format(str(foldIDk), 
-                                                    str(current_n_neighbors), 
-                                                    str(pred_new[index]), 
-                                                    str(y_new[index]), 
-                                                    is_error))
+        y_new_info[foldIDk] = y_new
+        y_pred_info[foldIDk] = pred_new
 
         # compute the zero-one loss of pred_new with respect to y_new
         #       and store the mean (error rate) in the corresponding entry 
         #       error_vec    
-        # use 100 - loss*100 in order to get percent instead of loss
-        error_vec.append(100 - (zero_one_loss(y_new, pred_new) * 100))
+        error_vec.append(zero_one_loss(y_new, pred_new))
 
-    return error_vec
+    pred_dict[current_n_neighbors] = [y_pred_info, y_new_info]
+
+    return error_vec, pred_dict
 
 
 # Function: NearestNeighborsCV
@@ -128,14 +136,17 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
     #       k = length of num_folds
     multiplier_of_num_folds = int(X_Mat.shape[0]/num_folds)
 
-    # extra_folds_to_add = 0
-    # # make sure that validation_fold_vec is the same size as X_Mat.shape[0]
-    # while num_folds * multiplier_of_num_folds != X_Mat.shape[0]:
-    #     extra_folds_to_add += 1
+    extra_folds_to_add = 0
 
     validation_fold_vec = np.array(list(np.arange(1, 
                                         num_folds + 1))
-                                        *multiplier_of_num_folds)
+                                        * multiplier_of_num_folds)
+
+    # make sure that validation_fold_vec is the same size as X_Mat.shape[0]
+    while validation_fold_vec.shape[0] != X_Mat.shape[0]:
+        validation_fold_vec = np.append(validation_fold_vec, random.randint(1, num_folds))
+
+
     np.random.shuffle(validation_fold_vec)
 
     # numeric matrix (num_folds x max_neighbors)
@@ -143,22 +154,34 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
     error_mat_index = 0
     current_n_neighbors = 1
 
+    # create a dictionary to help gather information about the predicted sets
+    # format this is saved in is: 
+    #   {num_neighbors : 
+    #       [
+    #           {foldIDk: [pred_new], foldIDk: [pred_new]}, 
+    #           {foldIDk: [y_new], foldIDk: [y_new]}
+    #       ]
+    #   }
+    prediction_dictionary = {}
+
     for num_neighbors in range(1, max_neighbors + 1):
         # call KFoldCV, and specify ComputePreditions = a function that uses
         #    your programming language’s default implementation of the nearest
         #    neighbors algorithm, with num_neighbors
 
         # store error rate vector in error_mat
-        error_mat[num_neighbors] = kFoldCV(X_Mat, 
+        error_mat[num_neighbors], prediction_dictionary = kFoldCV(X_Mat, 
                                         y_vec, 
                                         KNeighborsClassifier(n_neighbors = num_neighbors), 
                                         validation_fold_vec, 
-                                        current_n_neighbors)
+                                        current_n_neighbors,
+                                        prediction_dictionary)
         
         # variable for CSV formating
         current_n_neighbors += 1
 
         error_mat_index += 1
+
 
     # will contain the mean of each column of error_matrix
     mean_error_vec = {}
@@ -166,7 +189,7 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
 
     # take mean of each column of error_mat and add to mean_error_vec
     for number, column in error_mat.items():
-        mean_error_vec[number] = np.mean(column)
+        mean_error_vec[number] = np.mean(column)*100
 
     # create variable that contains the number of neighbors with minimal error
     best_neighbor = 1
@@ -182,7 +205,7 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
     #   (1) the predictions for X_New, using the entire X_mat, y_vec with 
     #       best_neighbors
     #   (2) the mean_error_mat for visualizing the validation error
-    return X_new, best_neighbor, error_mat
+    return prediction_dictionary, best_neighbor, mean_error_vec
 
 
 
@@ -218,13 +241,79 @@ def main():
     X_sc = scale(X_Mat)
     X_new = np.array([])
 
-    max_neighbors = 20
+    max_neighbors = MAX_NEIGHBORS
 
     X_new_predictions, best_neighbor, mean_error_mat = NearestNeighborsCV(X_sc,
                                                             y_vec,
                                                             X_new,
                                                             NUM_FOLDS,
                                                             max_neighbors)
+
+
+    ############################ SAVE INFO TO CSVS ############################
+
+
+
+    ######################## SAVE PREDICTION DICTIONARY #######################
+
+    # save X_new_predictions to a csv
+    #   this csv will contain the number of neighbors 
+    #        corresponding to the number of folds
+    #        corresponding to the predicted y val
+    #        corresponding to the actual y value
+    #        corresponding to if it was an accurate prediction
+    with open("prediction_dictionary.csv", mode = 'w') as roc_file:
+
+        fieldnames = ['num neighbors', 'num folds', 'predicted y', 
+                        'actual y', 'accurate prediction']
+        writer = csv.DictWriter(roc_file, fieldnames = fieldnames)
+
+        writer.writeheader()
+
+        # loop through the datasets for all the neighbors
+        for num_of_neighbors in range(1, max_neighbors + 1):
+
+            # get the list corresponding to specific neighbor
+            neighbor_values = X_new_predictions[num_of_neighbors]
+
+            # get dictionaries from list
+            prediction_vector = neighbor_values[PRED_NEW_INDEX]
+            actual_y_vector = neighbor_values[Y_NEW_INDEX]
+
+            num_fold = 1
+
+            # loop through the number of folds for each neighbor amount
+            for num_fold in range(1, NUM_FOLDS + 1):
+                prediction_values = prediction_vector[num_fold]
+                actual_y_values = actual_y_vector[num_fold]
+
+                # loop through an index for each of the values in each ..values vector
+                for index in range(len(prediction_values)):
+                    pred_val = prediction_values[index]
+                    actual_val = actual_y_values[index]
+
+                    accurate_prediction = pred_val == actual_val
+
+                    writer.writerow({'num neighbors' : num_of_neighbors, 
+                                    'num folds' : num_fold, 
+                                    'predicted y' : pred_val, 
+                                    'actual y' : actual_val, 
+                                    'accurate prediction' : accurate_prediction})
+
+
+
+    ########################## CREATE MEAN ERROR CSV ##########################
+    with open("mean_error.csv", mode = 'w') as roc_file:
+
+        fieldnames = ['num neighbors', 'mean error']
+        writer = csv.DictWriter(roc_file, fieldnames = fieldnames)
+
+        writer.writeheader()
+
+        for neighbor, error in mean_error_mat.items():
+            writer.writerow({'num neighbors': neighbor, 
+                            'mean error': error})
+            
 
     # write information for the X_new_predictions and x_error_mat to a csv file
 
