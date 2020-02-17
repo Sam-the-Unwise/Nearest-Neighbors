@@ -23,6 +23,7 @@ for(validation.fold in 1:n.folds){
   y.train <- y.vec[is.train]
   for(neighbors in 1:20){
     pred <- class::knn(X.train, X.sc, y.train, k=neighbors)
+    print(pred)
     pred.y <- as.integer(paste(pred))
     pred.dt <- data.table(
       set=ifelse(is.train, "train", "validation"),
