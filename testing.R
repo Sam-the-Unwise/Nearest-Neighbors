@@ -8,8 +8,9 @@ spam.dt <- data.table::fread("spam.data")[sample(.N, 1000)]
 N.obs <- nrow(spam.dt)
 X.raw <- as.matrix(spam.dt[, -ncol(spam.dt), with=FALSE])
 y.vec <- spam.dt[[ncol(spam.dt)]]
+print(X.raw)
 X.sc <- scale(X.raw)
-
+``
 set.seed(1)
 n.folds <- 5
 fold.vec <- sample(rep(1:n.folds, l=nrow(X.sc)))
@@ -19,11 +20,10 @@ for(validation.fold in 1:n.folds){
   is.validation <- fold.vec == validation.fold
   is.train <- !is.validation
   X.train <- X.sc[is.train, ]
-  print(X.train)
   y.train <- y.vec[is.train]
+  print(y.train)
   for(neighbors in 1:20){
     pred <- class::knn(X.train, X.sc, y.train, k=neighbors)
-    print(pred)
     pred.y <- as.integer(paste(pred))
     pred.dt <- data.table(
       set=ifelse(is.train, "train", "validation"),
@@ -35,6 +35,7 @@ for(validation.fold in 1:n.folds){
     ), by=set]
     err.dt.list[[paste(validation.fold, neighbors)]] <- data.table(
       validation.fold, neighbors, mean.err)
+    
   }
 }
 err.dt <- do.call(rbind, err.dt.list)

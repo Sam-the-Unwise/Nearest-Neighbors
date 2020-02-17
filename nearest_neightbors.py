@@ -8,14 +8,15 @@
 ###############################################################################
 
 import numpy as np
-import csv
+import csv, math
+from math import sqrt
 from sklearn.neighbors import NearestNeighbors as NN
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import scale
 from sklearn.metrics import zero_one_loss
 from sklearn import neighbors, datasets
 
-num_folds = 5
+NUM_FOLDS = 5
 
 TRUE = 1
 FALSE = 0
@@ -33,13 +34,15 @@ def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector):
 
     # numeric vector of size k
     error_vec = []
-
-    index_count = 0
+    col = x_mat.shape[1]
+    row = x_mat.shape[0]
 
     # loop over the unique values k in fold_vec
-    for foldIDk in range(1, num_folds):
+    for foldIDk in range(1, NUM_FOLDS):
         X_new = np.zeros(len(fold_vector)).astype(int)
         y_new = np.zeros(len(fold_vector)).astype(int)
+
+        one_items_in_x_new = 0
 
         # define X_new, y_new based on the observations for which the corr. elements
         #       of fold_vec are equal to the current fold ID k
@@ -49,19 +52,44 @@ def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector):
             if num == foldIDk:
                 X_new[index] = TRUE
                 y_new[index] = FALSE
+                one_items_in_x_new += 1
+                
             else:
                 X_new[index] = FALSE
                 y_new[index] = TRUE
 
             index += 1
 
+
         # define X_train, y_train using all the other observations
-        X_train = x_mat[X_new]
-        y_train = x_mat[y_new]
+        X_train = np.zeros(one_items_in_x_new*col).reshape(one_items_in_x_new, col)
+        y_train = []
+
+
+
+        x_index = 0
+
+        # add items to X_train
+        for item in X_new:
+            if item == TRUE:
+                X_train[x_index] = item
+
+
+
+        y_index = 0
+        # add elements of y_vec tbat correspond to X_train
+        for num_classifier in y_vec:
+            if X_new[y_index] == TRUE:
+                y_train.append(num_classifier)
+
+            #print(y_index)
+
+            y_index += 1
+        
 
 
         # call ComputePredictions and store the result in a variable named pred_new
-        pred_new = compute_prediction.fit(X_train, X_new).predict(y_train) 
+        pred_new = compute_prediction.fit(X_train, X_new).predict(y_train)
 
         # compute the zero-one loss of pred_new with respect to y_new
         #       and store the mean (error rate) in the corresponding entry error_vec
@@ -81,11 +109,12 @@ def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector):
 def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
     # array with numbers 1 to k
     #       k = length of num_folds
-    validation_fold_vec = np.array(list(np.arange(1, num_folds + 1))*max_neighbors)
+    multiplier_of_num_folds = int(X_Mat.shape[0]/num_folds)
+    validation_fold_vec = np.array(list(np.arange(1, num_folds + 1))*multiplier_of_num_folds)
+
+    print(validation_fold_vec.shape)
 
     np.random.shuffle(validation_fold_vec)
-
-    total_entries = num_folds * max_neighbors
 
     # numeric matrix (num_folds x max_neighbors)
     error_mat = []
@@ -123,6 +152,43 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
 
 
 
+# # Function: scale
+# # INPUT ARGS:
+# #   matrix : the matrix that we need to scale
+# # Return: [none]
+# def scale(matrix):
+#     matrix_t = np.transpose(matrix)
+#     counter = 0
+
+#     for column in matrix_t:
+#         counter += 1
+#         col_sq_sum = 0
+
+#         sum = np.sum(column)
+
+#         shape = column.shape
+#         col_size = shape[0]
+
+#         mean = sum/col_size
+
+#         for item in column:
+#             col_sq_sum += ((item - mean)**2)
+
+#         std = sqrt(col_sq_sum/col_size)
+
+
+
+#         if std == 0:
+#             matrix = np.delete(matrix, counter)
+            
+#         else:
+#             column -= mean
+#             column /= std
+    
+
+
+
+
 
 # Function: convert_data_to_matrix
 # INPUT ARGS:
@@ -132,7 +198,7 @@ def convert_data_to_matrix(file_name):
     with open(file_name, 'r') as data_file:
         spam_file = list(csv.reader(data_file, delimiter = " "))
 
-    data_matrix_full = np.array(spam_file[0:], dtype=np.float)
+    data_matrix_full = np.array(spam_file[0:1000], dtype=np.float)
     return data_matrix_full
 
 
@@ -154,14 +220,15 @@ def main():
     y_vec = data_matrix_full[:,57]
 
     X_sc = scale(X_Mat)
-
     X_new = np.array([])
 
-    X_new_predictions, mean_error_mat = NearestNeighborsCV(X_Mat,
+    max_neighbors = 20
+
+    X_new_predictions, mean_error_mat = NearestNeighborsCV(X_sc,
                                                             y_vec,
                                                             X_new,
-                                                            num_folds,
-                                                            20)
+                                                            NUM_FOLDS,
+                                                            max_neighbors)
 
     # TO DO:
 
