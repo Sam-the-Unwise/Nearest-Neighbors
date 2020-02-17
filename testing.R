@@ -21,7 +21,6 @@ for(validation.fold in 1:n.folds){
   is.train <- !is.validation
   X.train <- X.sc[is.train, ]
   y.train <- y.vec[is.train]
-  print(y.train)
   for(neighbors in 1:20){
     pred <- class::knn(X.train, X.sc, y.train, k=neighbors)
     pred.y <- as.integer(paste(pred))
