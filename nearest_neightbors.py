@@ -201,7 +201,7 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
         error_mat_index += 1
 
     # save error vector to a csv
-    with open("percent_error.csv", mode = 'w') as roc_file:
+    with open("NN_percent_error.csv", mode = 'w') as roc_file:
 
         fieldnames = ['num neighbors', 'fold', 'error']
         writer = csv.DictWriter(roc_file, fieldnames = fieldnames)
@@ -296,7 +296,7 @@ def main():
     #        corresponding to the predicted y val
     #        corresponding to the actual y value
     #        corresponding to if it was an accurate prediction
-    with open("prediction_dictionary.csv", mode = 'w') as roc_file:
+    with open("NN_prediction_dictionary.csv", mode = 'w') as roc_file:
 
         fieldnames = ['num neighbors', 'num folds', 'predicted y', 
                         'actual y', 'accurate prediction']
@@ -337,7 +337,7 @@ def main():
 
 
     ########################## CREATE MEAN ERROR CSV ##########################
-    with open("mean_error.csv", mode = 'w') as roc_file:
+    with open("NN_mean_error.csv", mode = 'w') as roc_file:
 
         fieldnames = ['num neighbors', 'mean error']
         writer = csv.DictWriter(roc_file, fieldnames = fieldnames)
