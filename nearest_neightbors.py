@@ -164,33 +164,30 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
     while validation_fold_vec.shape[0] != X_Mat.shape[0]:
         validation_fold_vec = np.append(validation_fold_vec, random.randint(1, num_folds))
 
+    np.random.shuffle(validation_fold_vec)
 
-    # create table that will display how many 0s and 1s are in each fold
-    dict_of_folds_to_classifiers = {}
+    # # create table that will display how many 0s and 1s are in each fold
+    # dict_of_folds_to_classifiers = {}
 
-    # initialize dict_of_folds values to 0
-    for num in range(1, num_folds + 1):
-        dict_of_folds_to_classifiers[num] = [0, 0]
+    # # initialize dict_of_folds values to 0
+    # for num in range(1, num_folds + 1):
+    #     dict_of_folds_to_classifiers[num] = [0, 0]
 
-    fold_num_index = 0
-    for fold_num in validation_fold_vec:
-        if y_vec[fold_num_index] == 0:
-            dict_of_folds_to_classifiers[fold_num][0] += 1
-        elif y_vec[fold_num_index] == 1:
-            dict_of_folds_to_classifiers[fold_num][1] += 1
+    # fold_num_index = 0
+    # for fold_num in validation_fold_vec:
+    #     if y_vec[fold_num_index] == 0:
+    #         dict_of_folds_to_classifiers[fold_num][0] += 1
+    #     elif y_vec[fold_num_index] == 1:
+    #         dict_of_folds_to_classifiers[fold_num][1] += 1
         
-        fold_num_index += 1
+    #     fold_num_index += 1
 
     
-    # print out table
-    print("{: <10s} | {: <10s} | {: <10s}".format("fold num", "0", "1"))
+    # # print out table
+    # print("{: <10s} | {: <10s} | {: <10s}".format("fold num", "0", "1"))
 
-    for fold, count_list in dict_of_folds_to_classifiers.items():
-        print("{: <10s} | {: <10s} | {: <10s}".format(str(fold), str(count_list[0]), str(count_list[1])))
-
-
-
-    np.random.shuffle(validation_fold_vec)
+    # for fold, count_list in dict_of_folds_to_classifiers.items():
+    #     print("{: <10s} | {: <10s} | {: <10s}".format(str(fold), str(count_list[0]), str(count_list[1])))
 
     # numeric matrix (num_folds x max_neighbors)
     error_mat = {}
@@ -205,7 +202,7 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
     #           {foldIDk: [y_new], foldIDk: [y_new]}
     #       ]
     #   }
-    prediction_dictionary = {}
+    predictions_for_x_new = {}
 
     for num_neighbors in range(1, max_neighbors + 1):
         # call KFoldCV, and specify ComputePreditions = a function that uses
@@ -213,12 +210,12 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
         #    neighbors algorithm, with num_neighbors
 
         # store error rate vector in error_mat
-        error_mat[num_neighbors], prediction_dictionary = kFoldCV(X_Mat, 
+        error_mat[num_neighbors], predictions_for_x_new = kFoldCV(X_Mat, 
                                         y_vec, 
                                         KNeighborsClassifier(n_neighbors = num_neighbors), 
                                         validation_fold_vec, 
                                         current_n_neighbors,
-                                        prediction_dictionary)
+                                        predictions_for_x_new)
         
         # variable for CSV formating
         current_n_neighbors += 1
@@ -254,17 +251,28 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
     best_neighbor = 1
     best_percentage = mean_error_vec[1]
 
+    worst_neighbor = 1
+    worst_percentage = mean_error_vec[1]
+
     # get the number of neighbors that has the minimal amount of error
     for item, value in mean_error_vec.items():
-        if value > best_percentage:
-            best_percentage = value
+ 
+        if value < best_percentage:
             best_neighbor = item
+            best_percentage = value
+
+        if value > worst_percentage:
+            worst_neighbor = item
+            worst_percentage = value
+
+    print("The best neighbor is " + str(best_neighbor) 
+            + " because it had the least error rate at " + str(best_percentage) + "\n")
 
     # output:
     #   (1) the predictions for X_New, using the entire X_mat, y_vec with 
     #       best_neighbors
     #   (2) the mean_error_mat for visualizing the validation error
-    return prediction_dictionary, best_neighbor, mean_error_vec
+    return [predictions_for_x_new, mean_error_vec]
 
 
 
@@ -287,7 +295,6 @@ def convert_data_to_matrix(file_name):
 def main():
     # get the data from our CSV file
     data_matrix_full = convert_data_to_matrix("spam.data")
-
     np.random.shuffle(data_matrix_full)
 
     # get necessary variables
@@ -302,15 +309,67 @@ def main():
 
     max_neighbors = MAX_NEIGHBORS
 
-    X_new_predictions, best_neighbor, mean_error_mat = NearestNeighborsCV(X_sc,
-                                                            y_vec,
-                                                            X_new,
-                                                            NUM_FOLDS,
-                                                            max_neighbors)
+    list_of_elements = NearestNeighborsCV(X_sc,
+                                            y_vec,
+                                            X_new,
+                                            NUM_FOLDS,
+                                            max_neighbors)
+
+
+
+    ############################## TEST FOLD VEC ##############################
+
+    # necessary variables to create test_fold_vec
+    num_folds = 4
+    multiplier_of_num_folds = int(X_Mat.shape[0]/num_folds)
+
+    test_fold_vec = np.array(list(np.arange(1, 
+                                        num_folds + 1))
+                                        * multiplier_of_num_folds)
+
+    # make sure that test_fold_vec is the same size as X_Mat.shape[0]
+    while test_fold_vec.shape[0] != X_sc.shape[0]:
+        test_fold_vec = np.append(test_fold_vec, random.randint(1, num_folds))
+
+    np.random.shuffle(test_fold_vec)
+
+    # create table that will display how many 0s and 1s are in each fold
+    dict_of_folds_to_classifiers = {}
+
+    # initialize dict_of_folds values to 0
+    for num in range(1, num_folds + 1):
+        dict_of_folds_to_classifiers[num] = [0, 0]
+
+    # get count of how many 0s and 1s are in each fold case
+    # store in dictionary in format {fold_num: [zero_count, ones_count], ....}
+    fold_num_index = 0
+    for fold_num in test_fold_vec:
+
+        if y_vec[fold_num_index] == 0:
+            dict_of_folds_to_classifiers[fold_num][0] += 1
+
+        elif y_vec[fold_num_index] == 1:
+            dict_of_folds_to_classifiers[fold_num][1] += 1
+        
+        fold_num_index += 1
+
+    
+    # print out table
+    print("Num Folds vs Classes")
+    print("------------------------------")
+    print("{: <10s} | {: <10s} | {: <10s}".format("fold num", "0", "1"))
+
+    for fold, count_list in dict_of_folds_to_classifiers.items():
+        print("{: <10s} | {: <10s} | {: <10s}".format(str(fold), str(count_list[0]), str(count_list[1])))
+
+
 
 
     ############################ SAVE INFO TO CSVS ############################
 
+    # get elements needed from our list_of_elements
+    X_new_predictions = list_of_elements[0]
+    mean_error_mat = list_of_elements[1]
 
 
     ######################## SAVE PREDICTION DICTIONARY #######################
@@ -392,9 +451,10 @@ def main():
     # Use KFoldCV with three algorithms:
     #       (1) baseline/underfit – predict most frequent class,
     #       (2) NearestNeighborsCV,
-    #       (3) overfit 1-nearest neighbors model. Plot the resulting test
-    #               error values as a function of the data set, in order to
-    #               show that the NearestNeighborsCV is more accurate than
-    #               the other two models. Example:
-
+    #       (3) overfit 1-nearest neighbors model. 
+    # 
+    # 
+    # Plot the resulting test error values as a function of the data set, in order to
+    #       show that the NearestNeighborsCV is more accurate than the other two models
+    
 main()
