@@ -48,10 +48,7 @@ def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector, current_n_neighbors, 
     y_new_info = {}
     y_pred_info = {}
 
-    array_of_zeros = []
-
-    for integer in range(col):
-        array_of_zeros.append(0)
+    array_of_zeros = [0] * (col)
 
     # loop over the unique values k in fold_vec
     for foldIDk in range(1, NUM_FOLDS + 1):
