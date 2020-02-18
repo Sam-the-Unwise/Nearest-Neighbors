@@ -17,7 +17,7 @@ from sklearn.metrics import zero_one_loss
 from sklearn import neighbors, datasets
 import random
 
-NUM_FOLDS = 5
+NUM_FOLDS = 4
 MAX_NEIGHBORS = 20
 
 PRED_NEW_INDEX = 0
@@ -48,15 +48,20 @@ def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector, current_n_neighbors, 
     y_new_info = {}
     y_pred_info = {}
 
+    array_of_zeros = []
+
+    for integer in range(col):
+        array_of_zeros.append(0)
+
     # loop over the unique values k in fold_vec
     for foldIDk in range(1, NUM_FOLDS + 1):
         # define X_train, y_train using all the other observations
-        X_train = np.zeros(col*eighty_percent_row).reshape(eighty_percent_row, col)
-        y_train = np.zeros(eighty_percent_row)
+        X_train = np.array(array_of_zeros).reshape(1, col)
+        y_train = np.zeros(1)
 
         # define X_new, y_new to contain the corr. folds of foldIDk to num_folds
-        X_new = np.zeros(col*twenty_percent_row).reshape(twenty_percent_row, col)
-        y_new = np.zeros(twenty_percent_row)
+        X_new = np.array(array_of_zeros).reshape(1, col)
+        y_new = np.zeros(1)
 
         one_items_in_x_new = 0
 
@@ -79,9 +84,12 @@ def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector, current_n_neighbors, 
                 # else:
                 #     y_new[new_index] = y_vec[index]
                 #     X_new[new_index] = x_mat[index,:]
+
+                y_new = np.append(y_new, y_vec[index])
+                X_new = np.vstack((X_new, x_mat[index,:]))
                 
-                y_new[new_index] = y_vec[index]
-                X_new[new_index] = x_mat[index,:]
+                # y_new[new_index] = y_vec[index]
+                # X_new[new_index] = x_mat[index,:]
 
                 new_index += 1
 
@@ -95,13 +103,23 @@ def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector, current_n_neighbors, 
                 # else:
                 #     y_train[train_index] = y_vec[index]
                 #     X_train[train_index] = x_mat[index,:]
+
+                y_train = np.append(y_train, y_vec[index])
+                X_train = np.vstack((X_train, x_mat[index,:]))
                 
-                y_train[train_index] = y_vec[index]
-                X_train[train_index] = x_mat[index,:]
+                # y_train[train_index] = y_vec[index]
+                # X_train[train_index] = x_mat[index,:]
 
                 train_index += 1
 
             index += 1
+
+        # delete zero elements used to initialize the arrays
+        X_new = np.delete(X_new, 1, 0)
+        X_train = np.delete(X_train, 1, 0)
+        y_train = np.delete(y_train, 1, 0)
+        y_new = np.delete(y_new, 1, 0)
+
 
         # call ComputePredictions and store the result in a variable named 
         #       pred_new
@@ -182,6 +200,22 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
 
         error_mat_index += 1
 
+    # save error vector to a csv
+    with open("percent_error.csv", mode = 'w') as roc_file:
+
+        fieldnames = ['num neighbors', 'fold', 'error']
+        writer = csv.DictWriter(roc_file, fieldnames = fieldnames)
+
+        writer.writeheader()
+
+        # get the fold number
+        for neighbor_number, error_list in error_mat.items():
+            for foldID in range(1, num_folds + 1):
+                error_val = error_list[foldID - 1]
+                writer.writerow({'num neighbors': neighbor_number,
+                                'fold': foldID,
+                                'error': error_val})
+
 
     # will contain the mean of each column of error_matrix
     mean_error_vec = {}
@@ -217,7 +251,7 @@ def convert_data_to_matrix(file_name):
     with open(file_name, 'r') as data_file:
         spam_file = list(csv.reader(data_file, delimiter = " "))
 
-    data_matrix_full = np.array(spam_file[0:4000], dtype=np.float)
+    data_matrix_full = np.array(spam_file[0:], dtype=np.float)
     return data_matrix_full
 
 
