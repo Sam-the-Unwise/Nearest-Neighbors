@@ -165,6 +165,31 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
         validation_fold_vec = np.append(validation_fold_vec, random.randint(1, num_folds))
 
 
+    # create table that will display how many 0s and 1s are in each fold
+    dict_of_folds_to_classifiers = {}
+
+    # initialize dict_of_folds values to 0
+    for num in range(1, num_folds + 1):
+        dict_of_folds_to_classifiers[num] = [0, 0]
+
+    fold_num_index = 0
+    for fold_num in validation_fold_vec:
+        if y_vec[fold_num_index] == 0:
+            dict_of_folds_to_classifiers[fold_num][0] += 1
+        elif y_vec[fold_num_index] == 1:
+            dict_of_folds_to_classifiers[fold_num][1] += 1
+        
+        fold_num_index += 1
+
+    
+    # print out table
+    print("{: <10s} | {: <10s} | {: <10s}".format("fold num", "0", "1"))
+
+    for fold, count_list in dict_of_folds_to_classifiers.items():
+        print("{: <10s} | {: <10s} | {: <10s}".format(str(fold), str(count_list[0]), str(count_list[1])))
+
+
+
     np.random.shuffle(validation_fold_vec)
 
     # numeric matrix (num_folds x max_neighbors)
