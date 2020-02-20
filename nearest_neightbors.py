@@ -51,7 +51,7 @@ def kFoldCV(x_mat, y_vec, compute_prediction, fold_vector, current_n_neighbors, 
     array_of_zeros = [0] * (col)
 
 
-    
+
     # loop over the unique values k in fold_vec
     for foldIDk in range(1, NUM_FOLDS + 1):
         # define X_train, y_train using all the other observations
@@ -264,6 +264,18 @@ def convert_data_to_matrix(file_name):
     data_matrix_full = np.array(spam_file[0:], dtype=np.float)
     return data_matrix_full
 
+# Function: baseline_pred
+# INPUT ARGS:
+#   y_vec: vector of spam or not
+# Return: vector of most common prediction
+def baseline_pred(y_vec):
+    baseline_pred_vec = np.zeros(len(y_vec)).reshape(len(y_vec),1)
+    unique_num, counts = np.unique(y_vec, return_counts=True)
+    if(counts[1] > counts[0]):
+        return baseline_pred_vec.ones(len(y_vec)).reshape(len(y_vec),1)
+    return baseline_pred_vec
+
+
 
 # Function: main
 # INPUT ARGS:
@@ -281,6 +293,8 @@ def main():
     X_Mat = np.delete(data_matrix_full, col_length - 1, 1)
     y_vec = data_matrix_full[:,57]
 
+    print(baseline_pred(y_vec))
+    """
     X_sc = scale(X_Mat)
     X_new = np.array([])
 
@@ -409,7 +423,7 @@ def main():
             writer.writerow({'num neighbors': neighbor,
                             'mean error': error})
 
-
+    """
     # write information for the X_new_predictions and x_error_mat to a csv file
 
     # TO DO:
