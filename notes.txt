@@ -1,0 +1,9 @@
+For ROC curve
+
+FPR: number of positives that you incorrectly predicted as negative
+TPR: number of positives that you correctly predicted
+accuracy: accuracy of prediction
+
+
+Plot points of the default learned threshold on ROC curve
+    -- default FPR
