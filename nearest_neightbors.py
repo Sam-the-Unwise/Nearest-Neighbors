@@ -189,7 +189,7 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
         # store error rate vector in error_mat
         error_mat[num_neighbors], predictions_for_x_new = kFoldCV(X_Mat,
                                         y_vec,
-                                        KNeighborsClassifier(n_neighbors = num_neighbors),
+                                        KNeighborsClassifier(n_neighbors = 1),
                                         validation_fold_vec,
                                         current_n_neighbors,
                                         predictions_for_x_new)
@@ -200,7 +200,7 @@ def NearestNeighborsCV(X_Mat, y_vec, X_new, num_folds, max_neighbors):
         error_mat_index += 1
 
     # save error vector to a csv
-    with open("NN_percent_error.csv", mode = 'w') as roc_file:
+    with open("1NN_percent_error.csv", mode = 'w') as roc_file:
 
         fieldnames = ['num neighbors', 'fold', 'error']
         writer = csv.DictWriter(roc_file, fieldnames = fieldnames)
@@ -293,8 +293,7 @@ def main():
     X_Mat = np.delete(data_matrix_full, col_length - 1, 1)
     y_vec = data_matrix_full[:,57]
 
-    print(baseline_pred(y_vec))
-    """
+
     X_sc = scale(X_Mat)
     X_new = np.array([])
 
@@ -371,7 +370,7 @@ def main():
     #        corresponding to the predicted y val
     #        corresponding to the actual y value
     #        corresponding to if it was an accurate prediction
-    with open("NN_prediction_dictionary.csv", mode = 'w') as roc_file:
+    with open("1NN_prediction_dictionary.csv", mode = 'w') as roc_file:
 
         fieldnames = ['num neighbors', 'num folds', 'predicted y',
                         'actual y', 'accurate prediction']
@@ -412,7 +411,7 @@ def main():
 
 
     ########################## CREATE MEAN ERROR CSV ##########################
-    with open("NN_mean_error.csv", mode = 'w') as roc_file:
+    with open("1NN_mean_error.csv", mode = 'w') as roc_file:
 
         fieldnames = ['num neighbors', 'mean error']
         writer = csv.DictWriter(roc_file, fieldnames = fieldnames)
@@ -423,7 +422,7 @@ def main():
             writer.writerow({'num neighbors': neighbor,
                             'mean error': error})
 
-    """
+
     # write information for the X_new_predictions and x_error_mat to a csv file
 
     # TO DO:
